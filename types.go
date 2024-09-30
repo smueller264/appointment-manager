@@ -1,13 +1,13 @@
 package main
 
 import (
-	"math/rand"
 	"time"
 )
 
 type CreatePatientRequest struct {
-	FirstaName string `json:"firstName"`
-	LastName   string `json:"lastName"`
+	FirstaName      string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	InsuranceNumber string `json:"insuranceNumber:`
 }
 
 type CreateDoctorRequest struct {
@@ -23,16 +23,16 @@ type CreateAppointmentRequest struct {
 }
 
 type CheckDoctorAvailabilityRequest struct {
-	Doctor int `json:"doctor"`
+	Doctor    int       `json:"doctor"`
 	TimeStart time.Time `json:"timeStart"`
-	TimeEnd time.Time `json:"timeEnd"`
+	TimeEnd   time.Time `json:"timeEnd"`
 }
 
 type Patient struct {
 	ID              int       `json:"id"`
 	FirstName       string    `json:"firstName"`
 	LastName        string    `json:"lastName"`
-	InsuranceNumber int64     `json:"insuranceNumber"`
+	InsuranceNumber string    `json:"insuranceNumber"`
 	CreatedAt       time.Time `json:"createdAt"`
 }
 
@@ -53,11 +53,11 @@ type Appointment struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-func NewPatient(firstName, lastName string) *Patient {
+func NewPatient(firstName string, lastName string, insuranceNumber string) *Patient {
 	return &Patient{
 		FirstName:       firstName,
 		LastName:        lastName,
-		InsuranceNumber: int64(rand.Intn(1000000)),
+		InsuranceNumber: insuranceNumber,
 		CreatedAt:       time.Now(),
 	}
 }

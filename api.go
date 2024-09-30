@@ -11,6 +11,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func (s *APIServer) enableCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
 func WriteJSON(w http.ResponseWriter, status int, v any) error {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -46,15 +60,18 @@ func CreateAPISever(listenAddr string, store Storage) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/patient", makeHTTPHandleFunc(s.handlePatient))
-	router.HandleFunc("/patient/{id}", makeHTTPHandleFunc(s.handleGetPatientByID))
-	router.HandleFunc("/doctor", makeHTTPHandleFunc(s.handleDoctor))
-	router.HandleFunc("/doctor/{id}", makeHTTPHandleFunc(s.handleGetDoctorByID))
-	router.HandleFunc("/appointment", makeHTTPHandleFunc((s.handleAppointment)))
-	router.HandleFunc("/appointment/{id}", makeHTTPHandleFunc(s.handleGetAppointmentByID))
-	router.HandleFunc("/appointmentbypatient/{id}", makeHTTPHandleFunc(s.handleGetAppointmentByPatient))
-	router.HandleFunc("/appointmentbydoctor/{id}", makeHTTPHandleFunc(s.handleGetAppointmentByDoctor))
-	router.HandleFunc("/checkdoctoravailability", makeHTTPHandleFunc(s.handleCheckDoctorAvailability))
+	router.HandleFunc("/patients", s.enableCORS(makeHTTPHandleFunc(s.HandleGetPatient)))
+	router.HandleFunc("/patient", s.enableCORS(makeHTTPHandleFunc(s.handlePatient)))
+	router.HandleFunc("/patient/{id}", s.enableCORS(makeHTTPHandleFunc(s.handleGetPatientByID)))
+	router.HandleFunc("/doctor", s.enableCORS(makeHTTPHandleFunc(s.handleDoctor)))
+	router.HandleFunc("/doctors", s.enableCORS(makeHTTPHandleFunc(s.handleGetDoctor)))
+	router.HandleFunc("/doctor/{id}", s.enableCORS(makeHTTPHandleFunc(s.handleGetDoctorByID)))
+	router.HandleFunc("/appointment", s.enableCORS(makeHTTPHandleFunc((s.handleAppointment))))
+	router.HandleFunc("/appointments", s.enableCORS(makeHTTPHandleFunc((s.handleGetAppointment))))
+	router.HandleFunc("/appointment/{id}", s.enableCORS(makeHTTPHandleFunc(s.handleGetAppointmentByID)))
+	router.HandleFunc("/appointmentbypatient/{id}", s.enableCORS(makeHTTPHandleFunc(s.handleGetAppointmentByPatient)))
+	router.HandleFunc("/appointmentbydoctor/{id}", s.enableCORS(makeHTTPHandleFunc(s.handleGetAppointmentByDoctor)))
+	router.HandleFunc("/checkdoctoravailability", s.enableCORS(makeHTTPHandleFunc(s.handleCheckDoctorAvailability)))
 
 	log.Println("API server running on port: ", s.listenAddr)
 	http.ListenAndServe(s.listenAddr, router)
@@ -62,9 +79,6 @@ func (s *APIServer) Run() {
 
 // Basic CRUD Functionality
 func (s *APIServer) handlePatient(w http.ResponseWriter, r *http.Request) error {
-	if r.Method == "GET" {
-		return s.HandleGetPatient(w, r)
-	}
 	if r.Method == "POST" {
 		return s.handleCreatePatient(w, r)
 	}
@@ -215,7 +229,7 @@ func (s *APIServer) handleCreatePatient(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	patient := NewPatient(createPatientReq.FirstaName, createPatientReq.LastName)
+	patient := NewPatient(createPatientReq.FirstaName, createPatientReq.LastName, createPatientReq.InsuranceNumber)
 	if err := s.store.CreatePatient(patient); err != nil {
 		return err
 	}

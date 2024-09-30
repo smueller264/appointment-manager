@@ -21,7 +21,7 @@ type Storage interface {
 	GetPatientAppointments(int) ([]*Appointment, error)
 	GetDoctorAppointments(int) ([]*Appointment, error)
 	GetAppointments() ([]*Appointment, error)
-	DeletePatientAppointments(int) error 
+	DeletePatientAppointments(int) error
 	CheckDoctorAvailability(int, time.Time, time.Time) ([]*Appointment, error)
 }
 
@@ -56,7 +56,7 @@ func (s *PostgresStore) Init() error {
 		return err
 	}
 	return nil
-	
+
 }
 
 func (s *PostgresStore) CreatePatientTable() error {
@@ -105,7 +105,7 @@ func (s *PostgresStore) DeletePatient(id int) error {
 }
 
 func (s *PostgresStore) DeleteAppointment(id int) error {
-	_, err := s.db.Query("delete from appintment where id = $1", id)
+	_, err := s.db.Query("delete from appointment where id = $1", id)
 	return err
 }
 
@@ -114,11 +114,8 @@ func (s *PostgresStore) DeletePatientAppointments(id int) error {
 	return err
 }
 
-
-
-
 func (s *PostgresStore) CreatePatient(patient *Patient) error {
-	
+
 	query := `insert into patient 
 	(first_name, last_name, insurance_number, created_at)
 	values ($1, $2, $3, $4)`
@@ -134,7 +131,7 @@ func (s *PostgresStore) CreatePatient(patient *Patient) error {
 }
 
 func (s *PostgresStore) CreateDoctor(doctor *Doctor) error {
-	
+
 	query := `insert into doctor 
 	(first_name, last_name, created_at)
 	values ($1, $2, $3)`
@@ -150,7 +147,7 @@ func (s *PostgresStore) CreateDoctor(doctor *Doctor) error {
 }
 
 func (s *PostgresStore) CreateAppointment(appointment *Appointment) error {
-	
+
 	query := `insert into appointment
 	(doctor, patient, appType, appStart, appEnd, created_at)
 	values ($1, $2, $3, $4, $5, $6)`
@@ -264,7 +261,7 @@ func (s *PostgresStore) GetDoctorAppointments(id int) ([]*Appointment, error) {
 }
 
 func (s *PostgresStore) CheckDoctorAvailability(id int, timeStart time.Time, timeEnd time.Time) ([]*Appointment, error) {
-	
+
 	fmt.Println(id, timeStart, timeEnd)
 	rows, err := s.db.Query("select * from appointment where doctor = $1 and (appStart < $3 and appEnd > $2)", id, timeStart, timeEnd)
 
@@ -307,9 +304,9 @@ func scanIntoPatient(rows *sql.Rows) (*Patient, error) {
 	patient := new(Patient)
 	err := rows.Scan(&patient.ID, &patient.FirstName, &patient.LastName, &patient.InsuranceNumber, &patient.CreatedAt)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
 	return patient, err
 }
@@ -318,9 +315,9 @@ func scanIntoDoctor(rows *sql.Rows) (*Doctor, error) {
 	doctor := new(Doctor)
 	err := rows.Scan(&doctor.ID, &doctor.FirstName, &doctor.LastName, &doctor.CreatedAt)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
 	return doctor, err
 }
@@ -329,9 +326,9 @@ func scanIntoAppintment(rows *sql.Rows) (*Appointment, error) {
 	appointment := new(Appointment)
 	err := rows.Scan(&appointment.ID, &appointment.Doctor, &appointment.Patient, &appointment.AppType, &appointment.AppStart, &appointment.AppEnd, &appointment.CreatedAt)
 
-		if err != nil {
-			return nil, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
 	return appointment, err
 }
